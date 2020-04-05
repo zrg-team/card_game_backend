@@ -23,16 +23,8 @@ exports.createRoom = functions.https.onCall(async (data, context) => {
     .doc(`${id}`), {
     player,
     draw: 0,
-    title,
-    host: uid,
     hostEmail: email,
-    players: [uid],
-    createDate: id,
-    result: {
-      draw: 0,
-      status: 0,
-      winner: ''
-    }
+    title: `Game room ${id}`
   })
   batch.set(admin
     .firestore()
@@ -41,10 +33,15 @@ exports.createRoom = functions.https.onCall(async (data, context) => {
     .collection('users')
     .doc(`${uid}`), {
     email: email,
-    name: names[0],
-    online: false,
-    // not need get on frontend
-    balance: 0
+    balance: 1000
+  })
+  batch.set(admin
+    .firestore()
+    .collection('rooms')
+    .doc(`${id}`), {
+    draw: 0,
+    status: 0,
+    winner: ''
   })
 
   return batch.commit()
