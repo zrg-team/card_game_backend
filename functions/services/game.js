@@ -22,7 +22,8 @@ exports.createRoom = functions.https.onCall(async (data, context) => {
     player,
     host,
     draw: 0,
-    hostEmail: email
+    hostEmail: email,
+    title: `Game room ${id}`
   })
   batch.set(admin
     .firestore()
@@ -36,8 +37,7 @@ exports.createRoom = functions.https.onCall(async (data, context) => {
   batch.set(admin
     .firestore()
     .collection('rooms')
-    .doc(`${id}`)
-    .doc('result'), {
+    .doc(`${id}`), {
     draw: 0,
     status: 0,
     winner: ''
