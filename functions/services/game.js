@@ -8,10 +8,12 @@ exports.createRoom = functions.https.onCall(async (data, context) => {
       'The function must be called while authenticated.'
     )
   }
-  const id = admin.firestore.Timestamp.now()
+  const id = admin.firestore.Timestamp.now().toMillis()
   const player = data.player
-  const host = context.auth.uid
+  const uid = context.auth.uid
   const email = context.auth.token.email
+  const names = email.split('@', 2)
+  const title = `${names[0]} - 4 player`
 
   const batch = admin.firestore().batch()
 
@@ -20,32 +22,107 @@ exports.createRoom = functions.https.onCall(async (data, context) => {
     .collection('rooms')
     .doc(`${id}`), {
     player,
-    host,
     draw: 0,
-    hostEmail: email
+    title,
+    host: uid,
+    hostEmail: email,
+    players: [uid],
+    createDate: id,
+    result: {
+      draw: 0,
+      status: 0,
+      winner: ''
+    }
   })
   batch.set(admin
     .firestore()
     .collection('rooms')
     .doc(`${id}`)
     .collection('users')
-    .doc(`${host}`), {
+    .doc(`${uid}`), {
     email: email,
-    balance: 1000
-  })
-  batch.set(admin
-    .firestore()
-    .collection('rooms')
-    .doc(`${id}`)
-    .doc('result'), {
-    draw: 0,
-    status: 0,
-    winner: ''
+    name: names[0],
+    online: false,
+    // not need get on frontend
+    balance: 0
   })
 
   return batch.commit()
     .then((value) => {
       return value
+    })
+})
+
+exports.joinRoom = functions.https.onCall(async (data, context) => {
+  if (!context.auth) {
+    throw new functions.https.HttpsError(
+      'failed-precondition',
+      'The function must be called while authenticated.'
+    )
+  }
+  const roomId = data.id
+  const playerId = context.auth.uid
+  const playerEmail = context.auth.token.email
+  const name = playerEmail.split('@', 2)[0]
+  const timestamp = admin.firestore.Timestamp.now().toMillis()
+
+  return admin.firestore()
+    .collection('rooms')
+    .doc(`${roomId}`)
+    .get()
+    .then(roomDoc => {
+      const room = roomDoc.data()
+      if (!room) {
+        throw new Error('ROOM_NOT_EXIST')
+      }
+      const isJoined = room.players.includes(playerId)
+      if (
+        !isJoined &&
+        room.players.length === room.player
+      ) {
+        throw new Error('ROOM_FULL')
+      }
+
+      const batch = admin.firestore().batch()
+      if (!isJoined) {
+        batch.update(admin
+          .firestore()
+          .collection('rooms')
+          .doc(`${roomId}`), {
+          players: [...room.players, playerId]
+        })
+
+        batch.set(admin
+          .firestore()
+          .collection('rooms')
+          .doc(`${roomId}`)
+          .collection('users')
+          .doc(`${playerId}`), {
+          email: playerEmail,
+          name: name,
+          online: true,
+          onlineDate: timestamp,
+          // not need get on frontend
+          balance: 0
+        })
+      } else {
+        batch.update(admin
+          .firestore()
+          .collection('rooms')
+          .doc(`${roomId}`)
+          .collection('users')
+          .doc(`${playerId}`), {
+          online: true,
+          onlineDate: timestamp,
+          // not need get on frontend
+          balance: 0
+        })
+      }
+
+      return batch.commit()
+        .then((value) => {
+          return value
+        })
     })
 })
 
