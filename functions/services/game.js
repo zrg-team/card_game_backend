@@ -149,4 +149,8 @@ exports.randomAllCards = functions.https.onRequest(async (req, res) => {
   }
 
   res.json({result: result});
+<<<<<<< HEAD
 });
+=======
+});
+>>>>>>> 60dbd5ce2cf676bd5d2b3cc0a8c6410d6a591a55
