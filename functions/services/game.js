@@ -13,7 +13,7 @@ exports.createRoom = functions.https.onCall(async (data, context) => {
   const uid = context.auth.uid
   const email = context.auth.token.email
   const names = email.split('@', 2)
-  const title = `${names[0]} - 4 player`
+  const title = `${names[0]}`
 
   const batch = admin.firestore().batch()
 
