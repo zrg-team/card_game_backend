@@ -1,6 +1,8 @@
 const functions = require('firebase-functions')
 const admin = require('firebase-admin')
 
+const GAME_STATE = ["NOT_STARTED_YET", "WAITING_FOR_RANDOM", "PLAYING", "DONE"];
+
 exports.createRoom = functions.https.onCall(async (data, context) => {
   if (!context.auth) {
     throw new functions.https.HttpsError(
@@ -32,7 +34,8 @@ exports.createRoom = functions.https.onCall(async (data, context) => {
       draw: 0,
       status: 0,
       winner: ''
-    }
+    },
+    readyPlayers: 0,
   })
   batch.set(admin
     .firestore()
@@ -140,10 +143,10 @@ exports.randomAllCards = functions.https.onCall(async (data, context) => {
   }
 
   const deckNames = ["unused",
-    "sA", "s2", "s3", "s4", "s5", "s6", "s7", "s8", "s9", "s10", "sJ", "sQ", "sK",
-    "hA", "h2", "h3", "h4", "h5", "h6", "h7", "h8", "h9", "h10", "hJ", "hQ", "hK",
-    "cA", "c2", "c3", "c4", "c5", "c6", "c7", "c8", "c9", "c10", "cJ", "cQ", "cK",
-    "dA", "d2", "d3", "d4", "d5", "d6", "d7", "d8", "d9", "d10", "dJ", "dQ", "dK",
+    "AS", "2S", "3S", "4S", "5S", "6S", "7S", "8S", "9S", "10S", "JS", "QS", "KS",
+    "AH", "2H", "3H", "4H", "5H", "6H", "7H", "8H", "9H", "10H", "JH", "QH", "KH",
+    "AC", "2C", "3C", "4C", "5C", "6C", "7C", "8C", "9C", "10C", "JC", "QC", "KC",
+    "AD", "2D", "3D", "4D", "5D", "6D", "7D", "8D", "9D", "10D", "JD", "QD", "KD",
   ];
 
   const result = [];
@@ -156,4 +159,62 @@ exports.randomAllCards = functions.https.onCall(async (data, context) => {
   }
 
   res.json({result: result});
+});
+
+
+exports.readyForPlay = functions.https.onCall(async (data, context) => {
+  if (!context.auth) {
+    throw new functions.https.HttpsError(
+      'failed-precondition',
+      'The function must be called while authenticated.'
+    )
+  }
+
+  const roomId = data.id
+
+  const batch = admin.firestore().batch()
+
+  return admin.firestore()
+    .collection('rooms')
+    .doc(`${roomId}`)
+    .get()
+    .then(roomDoc => {
+      const room = roomDoc.data()
+      if (!room) {
+        throw new Error('ROOM_NOT_EXIST')
+      }
+      const isJoined = room.players.includes(playerId)
+      if (
+        !isJoined &&
+        room.players.length === room.readyPlayers + 1
+      ) {
+        batch.update(admin
+          .firestore()
+          .collection('rooms')
+          .doc(`${roomId}`), {
+            ...room,
+            result: {
+              ...room.result,
+              status: "WAITING_FOR_RANDOM"
+            }
+        })
+        return batch.commit()
+        .then((value) => {
+          return value
+        }) 
+      }
+
+      batch.update(admin
+        .firestore()
+        .collection('rooms')
+        .doc(`${roomId}`), {
+          ...room,
+          readyPlayers: room.readyPlayers + 1
+      })
+
+      return batch.commit()
+        .then((value) => {
+          return value
+        })
+    });
 });
