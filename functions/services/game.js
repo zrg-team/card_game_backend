@@ -34,8 +34,7 @@ exports.createRoom = functions.https.onCall(async (data, context) => {
       draw: 0,
       status: 0,
       winner: ''
-    },
-    readyPlayers: 0,
+    }
   })
   batch.set(admin
     .firestore()
@@ -158,11 +157,11 @@ exports.randomAllCards = functions.https.onCall(async (data, context) => {
     deckNames.splice(position, 1);
   }
 
-  res.json({result: result});
+  return result;
 });
 
 
-exports.readyForPlay = functions.https.onCall(async (data, context) => {
+exports.readyToPlay = functions.https.onCall(async (data, context) => {
   if (!context.auth) {
     throw new functions.https.HttpsError(
       'failed-precondition',
