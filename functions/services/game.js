@@ -30,6 +30,7 @@ exports.createRoom = functions.https.onCall(async (data, context) => {
     hostEmail: email,
     players: [uid],
     createDate: id,
+    readyPlayers: 0,
     result: {
       draw: 0,
       status: 0,
