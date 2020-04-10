@@ -186,11 +186,9 @@ exports.readyToPlay = functions.https.onCall(async (data, context) => {
       if (!room) {
         throw new Error('ROOM_NOT_EXIST')
       }
-      const isJoined = room.players.includes(playerId)
 
       if (
-        !isJoined &&
-        room.players.length > 2 &&
+        room.players.length >= 2 &&
         room.players.length === room.readyPlayers + 1
       ) {
         batch.update(admin
@@ -201,7 +199,8 @@ exports.readyToPlay = functions.https.onCall(async (data, context) => {
             result: {
               ...room.result,
               status: "WAITING_FOR_RANDOM"
-            }
+            },
+            readyPlayers: 0,
         })
         return batch.commit()
         .then((value) => {
@@ -218,6 +217,47 @@ exports.readyToPlay = functions.https.onCall(async (data, context) => {
       })
 
       return batch.commit()
+        .then((value) => {
+          return value
+        })
+    });
+});
+
+exports.endGame = functions.https.onCall(async (data, context) => {
+  console.log(data);
+  console.log(context);
+  if (!context.auth) {
+    throw new functions.https.HttpsError(
+      'failed-precondition',
+      'The function must be called while authenticated.'
+    )
+  }
+
+  const roomId = data.id
+
+  const batch = admin.firestore().batch()
+
+  return admin.firestore()
+    .collection('rooms')
+    .doc(`${roomId}`)
+    .get()
+    .then(roomDoc => {
+      const room = roomDoc.data()
+      if (!room) {
+        throw new Error('ROOM_NOT_EXIST')
+      }
+
+      batch.update(admin
+          .firestore()
+          .collection('rooms')
+          .doc(`${roomId}`), {
+            ...room,
+            result: {
+              ...room.result,
+              status: "DONE"
+            },
+        })
+        return batch.commit()
         .then((value) => {
           return value
         })
