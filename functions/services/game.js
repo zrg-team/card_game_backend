@@ -163,6 +163,8 @@ exports.randomAllCards = functions.https.onCall(async (data, context) => {
 
 
 exports.readyToPlay = functions.https.onCall(async (data, context) => {
+  console.log(data);
+  console.log(context);
   if (!context.auth) {
     throw new functions.https.HttpsError(
       'failed-precondition',
@@ -171,6 +173,7 @@ exports.readyToPlay = functions.https.onCall(async (data, context) => {
   }
 
   const roomId = data.id
+  const playerId = context.auth.uid
 
   const batch = admin.firestore().batch()
 
@@ -184,8 +187,10 @@ exports.readyToPlay = functions.https.onCall(async (data, context) => {
         throw new Error('ROOM_NOT_EXIST')
       }
       const isJoined = room.players.includes(playerId)
+
       if (
         !isJoined &&
+        room.players.length > 2 &&
         room.players.length === room.readyPlayers + 1
       ) {
         batch.update(admin
