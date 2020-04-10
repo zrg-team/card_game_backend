@@ -23,12 +23,13 @@ exports.createRoom = functions.https.onCall(async (data, context) => {
     .firestore()
     .collection('rooms')
     .doc(`${id}`), {
-    player,
+    playerCound: player,
     draw: 0,
     title,
     host: uid,
     hostEmail: email,
     players: [uid],
+    playerNames: [names[0]],
     createDate: id,
     readyPlayers: 0,
     result: {
@@ -92,7 +93,8 @@ exports.joinRoom = functions.https.onCall(async (data, context) => {
           .firestore()
           .collection('rooms')
           .doc(`${roomId}`), {
-          players: [...room.players, playerId]
+          players: [...room.players, playerId],
+          playerNames: [...room.playerNames, name]
         })
 
         batch.set(admin
@@ -162,6 +164,8 @@ exports.randomAllCards = functions.https.onCall(async (data, context) => {
 
 
 exports.readyToPlay = functions.https.onCall(async (data, context) => {
+  console.log(data);
+  console.log(context);
   if (!context.auth) {
     throw new functions.https.HttpsError(
       'failed-precondition',
@@ -170,6 +174,7 @@ exports.readyToPlay = functions.https.onCall(async (data, context) => {
   }
 
   const roomId = data.id
+  const playerId = context.auth.uid
 
   const batch = admin.firestore().batch()
 
@@ -182,9 +187,9 @@ exports.readyToPlay = functions.https.onCall(async (data, context) => {
       if (!room) {
         throw new Error('ROOM_NOT_EXIST')
       }
-      const isJoined = room.players.includes(playerId)
+
       if (
-        !isJoined &&
+        room.players.length >= 2 &&
         room.players.length === room.readyPlayers + 1
       ) {
         batch.update(admin
@@ -195,7 +200,8 @@ exports.readyToPlay = functions.https.onCall(async (data, context) => {
             result: {
               ...room.result,
               status: "WAITING_FOR_RANDOM"
-            }
+            },
+            readyPlayers: 0,
         })
         return batch.commit()
         .then((value) => {
@@ -217,3 +223,44 @@ exports.readyToPlay = functions.https.onCall(async (data, context) => {
         })
     });
 });
+
+exports.endGame = functions.https.onCall(async (data, context) => {
+  console.log(data);
+  console.log(context);
+  if (!context.auth) {
+    throw new functions.https.HttpsError(
+      'failed-precondition',
+      'The function must be called while authenticated.'
+    )
+  }
+
+  const roomId = data.id
+
+  const batch = admin.firestore().batch()
+
+  return admin.firestore()
+    .collection('rooms')
+    .doc(`${roomId}`)
+    .get()
+    .then(roomDoc => {
+      const room = roomDoc.data()
+      if (!room) {
+        throw new Error('ROOM_NOT_EXIST')
+      }
+
+      batch.update(admin
+          .firestore()
+          .collection('rooms')
+          .doc(`${roomId}`), {
+            ...room,
+            result: {
+              ...room.result,
+              status: "DONE"
+            },
+        })
+        return batch.commit()
+        .then((value) => {
+          return value
+        })
+    });
+})
