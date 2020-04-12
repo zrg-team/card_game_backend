@@ -23,7 +23,7 @@ exports.createRoom = functions.https.onCall(async (data, context) => {
     .firestore()
     .collection('rooms')
     .doc(`${id}`), {
-    playerCound: player,
+    playerCount: player,
     draw: 0,
     title,
     host: uid,
