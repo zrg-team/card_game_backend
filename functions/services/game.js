@@ -1,7 +1,7 @@
 const functions = require('firebase-functions')
 const admin = require('firebase-admin')
 
-const GAME_STATE = ["NOT_STARTED_YET", "WAITING_FOR_RANDOM", "PLAYING", "DONE"];
+// const GAME_STATE = ['NOT_STARTED_YET', 'WAITING_FOR_RANDOM', 'PLAYING', 'DONE']
 
 exports.createRoom = functions.https.onCall(async (data, context) => {
   if (!context.auth) {
@@ -31,12 +31,13 @@ exports.createRoom = functions.https.onCall(async (data, context) => {
     players: [uid],
     playerNames: [names[0]],
     createDate: id,
-    readyPlayers: 0,
+    readyPlayers: [],
     randomNumber: 0,
     result: {
       draw: 0,
       status: 0,
-      winner: ''
+      winner: '',
+      donePlayers: []
     }
   })
   batch.set(admin
@@ -81,6 +82,8 @@ exports.joinRoom = functions.https.onCall(async (data, context) => {
       if (!room) {
         throw new Error('ROOM_NOT_EXIST')
       }
+      const readyPlayers = (room.readyPlayers || []).filter(item => item !== playerId)
+      const donePlayers = room.result.donePlayers || []
       const isJoined = room.players.includes(playerId)
       if (
         !isJoined &&
@@ -96,7 +99,12 @@ exports.joinRoom = functions.https.onCall(async (data, context) => {
           .collection('rooms')
           .doc(`${roomId}`), {
           players: [...room.players, playerId],
-          playerNames: [...room.playerNames, name]
+          playerNames: [...room.playerNames, name],
+          readyPlayers: readyPlayers,
+          result: {
+            ...room.result,
+            donePlayers: donePlayers.filter(item => item !== playerId)
+          }
         })
 
         batch.set(admin
@@ -111,9 +119,19 @@ exports.joinRoom = functions.https.onCall(async (data, context) => {
           onlineDate: timestamp,
           // not need get on frontend
           balance: 0,
-          cards: [],
+          cards: []
         })
       } else {
+        batch.update(admin
+          .firestore()
+          .collection('rooms')
+          .doc(`${roomId}`), {
+          readyPlayers: readyPlayers,
+          result: {
+            ...room.result,
+            donePlayers: donePlayers.filter(item => item !== playerId)
+          }
+        })
         batch.update(admin
           .firestore()
           .collection('rooms')
@@ -136,8 +154,8 @@ exports.joinRoom = functions.https.onCall(async (data, context) => {
 })
 
 const randomPosition = (number) => {
-  const position = Math.floor(Math.random() * number) + 1;
-  return position;
+  const position = Math.floor(Math.random() * number) + 1
+  return position
 }
 
 exports.randomAllCards = functions.https.onCall(async (data, context) => {
@@ -149,33 +167,33 @@ exports.randomAllCards = functions.https.onCall(async (data, context) => {
   }
 
   const roomId = data.id
-  const numberPlayers = data.readyPlayers
+  const numberPlayers = data.readyPlayers.length
 
-  const deckNames = ["unused",
-    "AS", "2S", "3S", "4S", "5S", "6S", "7S", "8S", "9S", "10S", "JS", "QS", "KS",
-    "AH", "2H", "3H", "4H", "5H", "6H", "7H", "8H", "9H", "10H", "JH", "QH", "KH",
-    "AC", "2C", "3C", "4C", "5C", "6C", "7C", "8C", "9C", "10C", "JC", "QC", "KC",
-    "AD", "2D", "3D", "4D", "5D", "6D", "7D", "8D", "9D", "10D", "JD", "QD", "KD",
-  ];
+  const deckNames = ['unused',
+    'AS', '2S', '3S', '4S', '5S', '6S', '7S', '8S', '9S', '10S', 'JS', 'QS', 'KS',
+    'AH', '2H', '3H', '4H', '5H', '6H', '7H', '8H', '9H', '10H', 'JH', 'QH', 'KH',
+    'AC', '2C', '3C', '4C', '5C', '6C', '7C', '8C', '9C', '10C', 'JC', 'QC', 'KC',
+    'AD', '2D', '3D', '4D', '5D', '6D', '7D', '8D', '9D', '10D', 'JD', 'QD', 'KD'
+  ]
 
-  const orderedCards = [];
- 
+  const orderedCards = []
+
   for (let i = 52; i > 0; i--) {
-    let position = randomPosition(i);
-    orderedCards.push(deckNames[position]);
-    deckNames.splice(position, 1);
+    const position = randomPosition(i)
+    orderedCards.push(deckNames[position])
+    deckNames.splice(position, 1)
   }
 
-  const random = Math.floor(Math.random() * 10);
+  const random = Math.floor(Math.random() * 10)
 
-  const orderedCardsWithRandom = [...orderedCards.splice(random), ...orderedCards];
+  const orderedCardsWithRandom = [...orderedCards.splice(random), ...orderedCards]
 
-  const playerCards = [[],[],[],[]];
-  for (let i = 0; i < numberPlayers; i ++) {
+  const playerCards = [[], [], [], []]
+  for (let i = 0; i < numberPlayers; i++) {
     for (let j = i; j < 13 * numberPlayers; j = j + numberPlayers) {
-      playerCards[i].push(orderedCardsWithRandom[j]);
+      playerCards[i].push(orderedCardsWithRandom[j])
     }
-  } 
+  }
 
   const batch = admin.firestore().batch()
 
@@ -196,7 +214,7 @@ exports.randomAllCards = functions.https.onCall(async (data, context) => {
           .doc(`${roomId}`)
           .collection('users')
           .doc(`${room.players[i]}`), {
-            cards: playerCards[i]
+          cards: playerCards[i]
         })
       }
 
@@ -204,25 +222,24 @@ exports.randomAllCards = functions.https.onCall(async (data, context) => {
         .firestore()
         .collection('rooms')
         .doc(`${roomId}`), {
-          ...room,
-          randomNumber: random,
-          result: {
-            ...room.result,
-            status: "PLAYING"
-          },
+        ...room,
+        randomNumber: random,
+        result: {
+          ...room.result,
+          status: 'PLAYING'
+        }
       })
 
       return batch.commit()
         .then((value) => {
           return value
         })
-    });
-});
-
+    })
+})
 
 exports.readyToPlay = functions.https.onCall(async (data, context) => {
-  console.log(data);
-  console.log(context);
+  console.log(data)
+  console.log(context)
   if (!context.auth) {
     throw new functions.https.HttpsError(
       'failed-precondition',
@@ -244,45 +261,55 @@ exports.readyToPlay = functions.https.onCall(async (data, context) => {
         throw new Error('ROOM_NOT_EXIST')
       }
 
+      const readyPlayers = room.readyPlayers || []
+      let donePlayers = room.result.readyPlayers || []
+      const playerId = context.auth.uid
+
+      if (!readyPlayers.includes(playerId)) {
+        readyPlayers.push(playerId)
+      }
+      donePlayers = donePlayers.filter(item => item !== playerId)
+
       if (
         room.players.length >= 2 &&
-        room.players.length === room.readyPlayers + 1
+        room.players.length === room.readyPlayers.length
       ) {
         batch.update(admin
           .firestore()
           .collection('rooms')
           .doc(`${roomId}`), {
-            ...room,
-            result: {
-              ...room.result,
-              status: "WAITING_FOR_RANDOM"
-            },
-            readyPlayers: room.readyPlayers + 1,
+          ...room,
+          result: {
+            ...room.result,
+            donePlayers,
+            status: 'WAITING_FOR_RANDOM'
+          },
+          readyPlayers: readyPlayers
         })
         return batch.commit()
-        .then((value) => {
-          return value
-        }) 
+          .then((value) => {
+            return value
+          })
       }
 
       batch.update(admin
         .firestore()
         .collection('rooms')
         .doc(`${roomId}`), {
-          ...room,
-          readyPlayers: room.readyPlayers + 1
+        ...room,
+        readyPlayers: readyPlayers
       })
 
       return batch.commit()
         .then((value) => {
           return value
         })
-    });
-});
+    })
+})
 
 exports.endGame = functions.https.onCall(async (data, context) => {
-  console.log(data);
-  console.log(context);
+  console.log(data)
+  console.log(context)
   if (!context.auth) {
     throw new functions.https.HttpsError(
       'failed-precondition',
@@ -291,6 +318,7 @@ exports.endGame = functions.https.onCall(async (data, context) => {
   }
 
   const roomId = data.id
+  const playerId = context.auth.uid
 
   const batch = admin.firestore().batch()
 
@@ -304,20 +332,43 @@ exports.endGame = functions.https.onCall(async (data, context) => {
         throw new Error('ROOM_NOT_EXIST')
       }
 
-      batch.update(admin
+      const donePlayers = room.result.donePlayers || []
+      // let readyPlayers = [...room.readyPlayers] || []
+
+      if (!donePlayers.includes(playerId)) {
+        donePlayers.push(playerId)
+        // readyPlayers = readyPlayers.filter(item => item !== playerId)
+      }
+      if (donePlayers.length === room.readyPlayers.length) {
+        batch.update(admin
           .firestore()
           .collection('rooms')
           .doc(`${roomId}`), {
-            ...room,
-            result: {
-              ...room.result,
-              status: "DONE",
-              readyPlayers: 0
-            },
+          ...room,
+          result: {
+            ...room.result,
+            donePlayers: [],
+            status: 'DONE'
+          },
+          readyPlayers: []
         })
-        return batch.commit()
+      } else {
+        batch.update(admin
+          .firestore()
+          .collection('rooms')
+          .doc(`${roomId}`), {
+          ...room,
+          result: {
+            ...room.result,
+            donePlayers: donePlayers,
+            status: 'FINISHING'
+          }
+        })
+      }
+
+      return batch.commit()
         .then((value) => {
           return value
         })
-    });
+    })
 })
