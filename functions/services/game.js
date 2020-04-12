@@ -196,7 +196,11 @@ exports.randomAllCards = functions.https.onCall(async (data, context) => {
           .doc(`${roomId}`)
           .collection('users')
           .doc(`${room.players[i]}`), {
+<<<<<<< HEAD
             cards: playerCards[i]
+=======
+            cards: cards[i]
+>>>>>>> 9525c55feb0b02d61b294bc4777dd7e204e1d76a
         })
       }
 
