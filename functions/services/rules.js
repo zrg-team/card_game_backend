@@ -1,3 +1,4 @@
+var { sortBy } = require('lodash');
 
 const convertToNumber = (string) => {
   switch (string) {
@@ -44,10 +45,15 @@ const rankHand = cards => {
 
   // sort high to low
   result = result.filter((rank) => !!rank).reverse();
-  
+
+  // FIX ME: will use this when upgrade node to v11 dueto sort of v8 is not stable
+  // const result1 = result.sort((a, b) => {
+  //   return a.length > b.length ? -1 : a.length < b.length ? 1 : 0;
+  // });
+
   // pairs and sets first
-  result = result.sort((a, b) => {
-    return a.length > b.length ? -1 : a.length < b.length ? 1 : 0;
+  result = sortBy(result, function(item){
+    return -item.length
   });
 
   return result;
@@ -67,6 +73,32 @@ const value = (ranked, primary) => {
   }
 
   return (primary * 10000000000) + parseInt(str);
+}
+
+
+// have no flush
+const isHaveNoFlush = cards => {
+  let SCount = 0;
+  let HCount = 0;
+  let DCount = 0;
+  let CCount = 0;
+
+  for (let card of cards) {
+      if (card[1] === 'H')
+        HCount ++;
+      if (card[1] === 'S')
+        SCount ++;
+      if (card[1] === 'D')
+        DCount ++;
+      if (card[1] === 'C')
+        CCount ++;
+      console.log(HCount)
+      if (HCount === 5 || SCount === 5 || DCount === 5 || CCount === 5) {
+        return false
+      }
+  }
+
+  return true;
 }
 
 // flush
@@ -184,10 +216,38 @@ const isSubStraight = ranked => {
   return (r0 - r2) === 2;
 }
 
+// isHaveNoStraight
+const isHaveNoStraight = ranked => {
+  // case ACE, X, X, X, X, X, X, 5, 4, 3, 2
+  if (ranked[0][0][0] === 'A' && ranked[7] 
+      && ranked[7][0][0] === '5' && ranked[8] 
+      && ranked[8][0][0] === '4' && ranked[9] 
+      && ranked[9][0][0] === '3' && 
+      ranked[10] && ranked[10][0][0] === '2'
+      ) {
+    return false
+  }
+
+  let count = 0;
+
+  for (let i = 0; i < ranked.length -1; i++) {
+    if (convertToNumber(ranked[i][0][0]) - convertToNumber(ranked[i+1][0][0]) === 1) {
+      count ++;
+    } else {
+      count = 0;
+    }
+    if (count === 5) return false;
+  }
+
+  return true
+}
+
 const calculate = hand => {
   const ranked = rankHand(hand);
 
-  const isFlush = isFlushCards(ranked);
+
+  // fix here
+  const isFlush = isFlushCards(hand);
   const isStraight = isStraightCards(ranked);
   console.log('calculate', ranked, isFlush, isStraight)
   if (isStraight && isFlush && ranked[0][0][0] === 'A' && ranked[4] && ranked[4][0] && ranked[4][0][0] === '10')
@@ -232,14 +292,14 @@ const calculate = hand => {
       handRank: value(ranked, 8)
     }
 
-  else if (isStraight && ranked[0][0][0] === 'A' && ranked[4] && [ranked][4][0] && ranked[4][0][0] === '10')
+  else if (isStraight && ranked[0][0][0] === 'A' && ranked[4] && ranked[4][0] && ranked[4][0][0] === '10')
     return {
       handType: 7,
       handName: 'sanh_10_A',
       handRank: value(ranked, 7)
     }
 
-  else if (isStraight && ranked[0][0][0] === 'A' && ranked[4] && [ranked][4][0] && ranked[4][0][0] === '2')
+  else if (isStraight && ranked[0][0][0] === 'A' && ranked[4] && ranked[4][0] && ranked[4][0][0] === '2')
     return {
       handType: 6,
       handName: 'sanh_A_5',
@@ -360,12 +420,13 @@ const evalBack = (hand1, hand2) => {
 }
 
 const superWin = hand => {
-  const back = hand.slice(0,5)
-  const mid = hand.slice(5,10)
-  const front = hand.slice(10,13)
+  const front = hand.slice(0,3)
+  const mid = hand.slice(3,8)
+  const back = hand.slice(8,13)
 
   const ranked = rankHand(hand);
   console.log('superWin', ranked);
+
   if (ranked[0][0][0] === 'A' && ranked[12] && ranked[12][0] && ranked[12][0][0] === '2')
     return {
       handType: 1,
@@ -380,14 +441,14 @@ const superWin = hand => {
       handRank: 26
     }
 
-  else if (ranked[0].length === 3 && ranked.length === 10)
+  else if (ranked[0].length === 3 && ranked.length === 11 && isHaveNoFlush(hand) && isHaveNoStraight(ranked.slice(1,11)))
     return {
       handType: 7,
       handName: 'chi_mot_xam_chi',
       handRank: 22
     }
   
-  else if (ranked[0].length === 2 && ranked[0].length === 2 && ranked.length === 11)
+  else if (ranked[0].length === 2 && ranked[0].length === 2 && ranked.length === 11 && isHaveNoFlush(hand) && isHaveNoStraight(ranked.slice(2,11)))
     return {
       handType: 6,
       handName: 'chi_co_2_doi',
@@ -438,13 +499,12 @@ const superWin = hand => {
 const countACE = hand => {
   count = -1;
 
-  for (h in hand) {
-    for (let card of hand) {
-      if (card[0] === 'A') {
-        count++;
-      }
+  for (let card of hand) {
+    if (card[0] === 'A') {
+      count++;
     }
   }
+
   console.log('countACE', count);
   return 4 * count
 }
@@ -492,24 +552,32 @@ const compare = (hand1, hand2) => {
   }
   console.log('compare', res1);
   console.log('compare', res2);
+
+  const winACE = countACE(hand1);
+
+  result = {...result, winACE }
+
   if (res1.handType > 0 && res2.handType > 0) return {...result, isMaubinh: true, maubinh: 0}
 
   if (res1.handType > 0 && res2.handType === 0) return {...result, isMaubinh: true, maubinh: res1.handRank}
 
   if (res1.handType === 0 && res2.handType > 0) return {...result, isMaubinh: false, maubinh: -res2.handRank}
 
-  const back1 = hand1.slice(0,5)
-  const back2 = hand2.slice(0,5)
+  const front1 = hand1.slice(0,3)
+  const front2 = hand2.slice(0,3)
 
-  const mid1 = hand1.slice(5,10)
-  const mid2 = hand2.slice(5,10)
+  const mid1 = hand1.slice(3,8)
+  const mid2 = hand2.slice(3,8)
 
-  const front1 = hand1.slice(10,13)
-  const front2 = hand2.slice(10,13)
+  const back1 = hand1.slice(8,13)
+  const back2 = hand2.slice(8,13)
 
   // check if binh lung
-  if (isFoul(back1, mid1, front1))
+  if (isFoul(back1, mid1, front1) && res1.handType === 0)
     return {...result, foul: -30}
+  
+  if (isFoul(back2, mid2, front2) && res2.handType === 0)
+    return {...result, foul: +30}
 
   const resBack = evalBack(back1, back2)
 
@@ -518,7 +586,6 @@ const compare = (hand1, hand2) => {
   const resFront = evalFront(front1, front2)
 
   // dem xi
-  const winACE = countACE(hand1);
 
   console.log('compare', resBack, resMid, resFront, winACE)
   return {
@@ -526,11 +593,10 @@ const compare = (hand1, hand2) => {
     front: resFront,
     mid: resMid,
     back: resBack,
-    winACE,
   }
 }
 
-const calculateResult = (userCards) => {
+exports.calculateResult = (userCards) => {
   const length = userCards.length;
   const userRes = [];
   console.log('calculateResult', userCards, length);
@@ -560,5 +626,31 @@ const calculateResult = (userCards) => {
     }
   }
 
-  console.log('userRes', userRes);
+  return userRes;
 }
+// calculateResult([[ 'QH',
+// '3C',
+// '3S',
+// '6S',
+// '8S',
+// '5H',
+// 'AS',
+// 'AD',
+// '4S',
+// '5S',
+// '6D',
+// '7H',
+// '8C' ],['9S',
+// '2H',
+// 'KC',
+// '7D',
+// '2D',
+// '4C',
+// '9H',
+// '5D',
+// '9C',
+// 'XD',
+// '3D',
+// 'JS',
+// 'QS']]);
+// ['4C','3D','QD','JH','5H','6H','9H','AH','8C','8H','8D','KC','XD']

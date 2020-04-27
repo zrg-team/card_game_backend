@@ -38,3 +38,6 @@ calculateResult([["AH","KH","JH","JH","9H","9C","7C","7C","6C","6C","4S","4S","3
 // expect 3 chi sanh
 calculateResult([["AH","KS","JH","QH","XH","XC","9C","JC","8C","QC","3S","2H","AS"],
 ["KS","KD","9D","3H","8H","KS","KD","9D","3H","8H","9D","3H","8H"]]);
+
+// expect chi co 1 chi va co sanh
+calculateResult([['JC','3D','QD','7H','5H','6H','9H','AH','8C','8H','8D','KD','10C'],['XC','KC','QH','XS','2S','4D','3S','5S','XH','AD','AD','6D','8C']]);
