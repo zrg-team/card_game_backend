@@ -250,63 +250,63 @@ const calculate = hand => {
   const isFlush = isFlushCards(hand);
   const isStraight = isStraightCards(ranked);
   console.log('calculate', ranked, isFlush, isStraight)
-  if (isStraight && isFlush && ranked[0][0][0] === 'A' && ranked[4] && ranked[4][0] && ranked[4][0][0] === '10')
+  if (hand.length === 5 && isStraight && isFlush && ranked[0][0][0] === 'A' && ranked[4] && ranked[4][0] && ranked[4][0][0] === '10')
     return {
       handType: 13,
       handName: 'thung_pha_sanh_10_A',
       handRank: value(ranked, 13)
     }
 
-  else if (isStraight && isFlush && ranked[0][0][0] === 'A' && ranked[4] && ranked[4][0] && ranked[4][0][0] === '2')
+  else if (hand.length === 5 && isStraight && isFlush && ranked[0][0][0] === 'A' && ranked[4] && ranked[4][0] && ranked[4][0][0] === '2' && hand.length > 5)
     return {
       handType: 12,
       handName: 'thung_pha_sanh_A_5',
       handRank: value(ranked, 12)
     }
   
-  else if (isStraight && isFlush && ranked[0][0][0] !== 'A')
+  else if (hand.length === 5 && isStraight && isFlush && ranked[0][0][0] !== 'A')
     return {
       handType: 11,
       handName: 'thung_pha_sanh',
       handRank: value(ranked, 11)
     }
 
-  else if (ranked[0].length === 4)
+  else if (hand.length === 5 && ranked[0].length === 4)
     return {
       handType: 10,
       handName: 'tu_quy',
       handRank: value(ranked, 10)
     }
 
-  else if (ranked[0].length === 3 && ranked[1] && ranked[1].length === 2)
+  else if (hand.length === 5 && ranked[0].length === 3 && ranked[1] && ranked[1].length === 2)
     return {
       handType: 9,
       handName: 'cu_lu',
       handRank: value(ranked, 9)
     }
 
-  else if (isFlush)
+  else if (hand.length === 5 && isFlush)
     return {
       handType: 8,
       handName: 'thung',
       handRank: value(ranked, 8)
     }
 
-  else if (isStraight && ranked[0][0][0] === 'A' && ranked[4] && ranked[4][0] && ranked[4][0][0] === '10')
+  else if (hand.length === 5 && isStraight && ranked[0][0][0] === 'A' && ranked[4] && ranked[4][0] && ranked[4][0][0] === '10')
     return {
       handType: 7,
       handName: 'sanh_10_A',
       handRank: value(ranked, 7)
     }
 
-  else if (isStraight && ranked[0][0][0] === 'A' && ranked[4] && ranked[4][0] && ranked[4][0][0] === '2')
+  else if (hand.length === 5 && isStraight && ranked[0][0][0] === 'A' && ranked[4] && ranked[4][0] && ranked[4][0][0] === '2')
     return {
       handType: 6,
       handName: 'sanh_A_5',
       handRank: value(ranked, 6)
     }
 
-  else if (isStraight && ranked[0][0][0] !== 'A')
+  else if (hand.length === 5 && isStraight && ranked[0][0][0] !== 'A')
     return {
       handType: 5,
       handName: 'sanh',
@@ -320,7 +320,7 @@ const calculate = hand => {
       handRank: value(ranked, 4)
     }
 
-  else if (ranked[0].length === 2 && ranked[1].length === 2)
+  else if (hand.length === 5 && ranked[0].length === 2 && ranked[1].length === 2)
     return {
       handType: 3,
       handName: 'hai_doi',
@@ -541,7 +541,7 @@ const compare = (hand1, hand2) => {
   const res1 = superWin(hand1)
   const res2 = superWin(hand2)
 
-  const result = {
+  let result = {
     isMaubinh: false,
     maubinh: 0,
     front: 0,
@@ -596,7 +596,7 @@ const compare = (hand1, hand2) => {
   }
 }
 
-exports.calculateResult = (userCards) => {
+calculateResult = (userCards) => {
   const length = userCards.length;
   const userRes = [];
   console.log('calculateResult', userCards, length);
@@ -628,29 +628,29 @@ exports.calculateResult = (userCards) => {
 
   return userRes;
 }
-// calculateResult([[ 'QH',
-// '3C',
-// '3S',
-// '6S',
-// '8S',
-// '5H',
-// 'AS',
-// 'AD',
-// '4S',
-// '5S',
-// '6D',
-// '7H',
-// '8C' ],['9S',
-// '2H',
-// 'KC',
-// '7D',
-// '2D',
-// '4C',
-// '9H',
-// '5D',
-// '9C',
-// 'XD',
-// '3D',
-// 'JS',
-// 'QS']]);
+calculateResult([[ 'QH',
+'3C',
+'3S',
+'6S',
+'8S',
+'5H',
+'AS',
+'AD',
+'4S',
+'5S',
+'6D',
+'7H',
+'8C' ],['9S',
+'2S',
+'KS',
+'7D',
+'2D',
+'4C',
+'9H',
+'5D',
+'9C',
+'XD',
+'3D',
+'JS',
+'QS']]);
 // ['4C','3D','QD','JH','5H','6H','9H','AH','8C','8H','8D','KC','XD']
