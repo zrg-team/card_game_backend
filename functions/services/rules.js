@@ -250,63 +250,63 @@ const calculate = hand => {
   const isFlush = isFlushCards(hand);
   const isStraight = isStraightCards(ranked);
   console.log('calculate', ranked, isFlush, isStraight)
-  if (isStraight && isFlush && ranked[0][0][0] === 'A' && ranked[4] && ranked[4][0] && ranked[4][0][0] === '10')
+  if (hand.length === 5 && isStraight && isFlush && ranked[0][0][0] === 'A' && ranked[4] && ranked[4][0] && ranked[4][0][0] === '10')
     return {
       handType: 13,
       handName: 'thung_pha_sanh_10_A',
       handRank: value(ranked, 13)
     }
 
-  else if (isStraight && isFlush && ranked[0][0][0] === 'A' && ranked[4] && ranked[4][0] && ranked[4][0][0] === '2')
+  else if (hand.length === 5 && isStraight && isFlush && ranked[0][0][0] === 'A' && ranked[4] && ranked[4][0] && ranked[4][0][0] === '2' && hand.length > 5)
     return {
       handType: 12,
       handName: 'thung_pha_sanh_A_5',
       handRank: value(ranked, 12)
     }
   
-  else if (isStraight && isFlush && ranked[0][0][0] !== 'A')
+  else if (hand.length === 5 && isStraight && isFlush && ranked[0][0][0] !== 'A')
     return {
       handType: 11,
       handName: 'thung_pha_sanh',
       handRank: value(ranked, 11)
     }
 
-  else if (ranked[0].length === 4)
+  else if (hand.length === 5 && ranked[0].length === 4)
     return {
       handType: 10,
       handName: 'tu_quy',
       handRank: value(ranked, 10)
     }
 
-  else if (ranked[0].length === 3 && ranked[1] && ranked[1].length === 2)
+  else if (hand.length === 5 && ranked[0].length === 3 && ranked[1] && ranked[1].length === 2)
     return {
       handType: 9,
       handName: 'cu_lu',
       handRank: value(ranked, 9)
     }
 
-  else if (isFlush)
+  else if (hand.length === 5 && isFlush)
     return {
       handType: 8,
       handName: 'thung',
       handRank: value(ranked, 8)
     }
 
-  else if (isStraight && ranked[0][0][0] === 'A' && ranked[4] && ranked[4][0] && ranked[4][0][0] === '10')
+  else if (hand.length === 5 && isStraight && ranked[0][0][0] === 'A' && ranked[4] && ranked[4][0] && ranked[4][0][0] === '10')
     return {
       handType: 7,
       handName: 'sanh_10_A',
       handRank: value(ranked, 7)
     }
 
-  else if (isStraight && ranked[0][0][0] === 'A' && ranked[4] && ranked[4][0] && ranked[4][0][0] === '2')
+  else if (hand.length === 5 && isStraight && ranked[0][0][0] === 'A' && ranked[4] && ranked[4][0] && ranked[4][0][0] === '2')
     return {
       handType: 6,
       handName: 'sanh_A_5',
       handRank: value(ranked, 6)
     }
 
-  else if (isStraight && ranked[0][0][0] !== 'A')
+  else if (hand.length === 5 && isStraight && ranked[0][0][0] !== 'A')
     return {
       handType: 5,
       handName: 'sanh',
@@ -320,7 +320,7 @@ const calculate = hand => {
       handRank: value(ranked, 4)
     }
 
-  else if (ranked[0].length === 2 && ranked[1].length === 2)
+  else if (hand.length === 5 && ranked[0].length === 2 && ranked[1].length === 2)
     return {
       handType: 3,
       handName: 'hai_doi',
