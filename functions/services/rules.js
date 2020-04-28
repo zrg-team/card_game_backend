@@ -596,7 +596,7 @@ const compare = (hand1, hand2) => {
   }
 }
 
-calculateResult = (userCards) => {
+exports.calculateResult = (userCards) => {
   const length = userCards.length;
   const userRes = [];
   console.log('calculateResult', userCards, length);
@@ -628,29 +628,29 @@ calculateResult = (userCards) => {
 
   return userRes;
 }
-calculateResult([[ 'QH',
-'3C',
-'3S',
-'6S',
-'8S',
-'5H',
-'AS',
-'AD',
-'4S',
-'5S',
-'6D',
-'7H',
-'8C' ],['9S',
-'2S',
-'KS',
-'7D',
-'2D',
-'4C',
-'9H',
-'5D',
-'9C',
-'XD',
-'3D',
-'JS',
-'QS']]);
+// calculateResult([[ 'QH',
+// '3C',
+// '3S',
+// '6S',
+// '8S',
+// '5H',
+// 'AS',
+// 'AD',
+// '4S',
+// '5S',
+// '6D',
+// '7H',
+// '8C' ],['9S',
+// '2S',
+// 'KS',
+// '7D',
+// '2D',
+// '4C',
+// '9H',
+// '5D',
+// '9C',
+// 'XD',
+// '3D',
+// 'JS',
+// 'QS']]);
 // ['4C','3D','QD','JH','5H','6H','9H','AH','8C','8H','8D','KC','XD']
