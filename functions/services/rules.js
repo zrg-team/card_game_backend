@@ -572,12 +572,12 @@ const compare = (hand1, hand2) => {
   const back1 = hand1.slice(8,13)
   const back2 = hand2.slice(8,13)
 
-  // check if binh lung
-  if (isFoul(back1, mid1, front1) && res1.handType === 0)
-    return {...result, foul: -30}
+  // TODO: check if binh lung
+  // if (isFoul(back1, mid1, front1) && res1.handType === 0)
+  //   return {...result, foul: -30}
   
-  if (isFoul(back2, mid2, front2) && res2.handType === 0)
-    return {...result, foul: +30}
+  // if (isFoul(back2, mid2, front2) && res2.handType === 0)
+  //   return {...result, foul: +30}
 
   const resBack = evalBack(back1, back2)
 
