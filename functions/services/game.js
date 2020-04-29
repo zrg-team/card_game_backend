@@ -31,6 +31,7 @@ exports.createRoom = functions.https.onCall(async (data, context) => {
     host: uid,
     hostEmail: email,
     players: [uid],
+    playerNames: [names[0]],
     createDate: id,
     readyPlayers: [],
     randomNumber: 0,
@@ -100,6 +101,7 @@ exports.joinRoom = functions.https.onCall(async (data, context) => {
           .collection('rooms')
           .doc(`${roomId}`), {
           players: [...room.players, playerId],
+          playerNames: [...room.playerNames, name],
           readyPlayers: readyPlayers,
           result: {
             ...room.result,
