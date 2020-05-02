@@ -30,8 +30,8 @@ exports.createRoom = functions.https.onCall(async (data, context) => {
     title,
     host: uid,
     hostEmail: email,
-    players: [uid],
-    playerNames: [names[0]],
+    players: [],
+    playerNames: [],
     createDate: id,
     readyPlayers: [],
     randomNumber: 0,
@@ -42,19 +42,19 @@ exports.createRoom = functions.https.onCall(async (data, context) => {
       donePlayers: []
     }
   })
-  batch.set(admin
-    .firestore()
-    .collection('rooms')
-    .doc(`${id}`)
-    .collection('users')
-    .doc(`${uid}`), {
-    email: email,
-    name: names[0],
-    online: false,
-    // not need get on frontend
-    balance: 0,
-    cards: []
-  })
+  // batch.set(admin
+  //   .firestore()
+  //   .collection('rooms')
+  //   .doc(`${id}`)
+  //   .collection('users')
+  //   .doc(`${uid}`), {
+  //   email: email,
+  //   name: names[0],
+  //   online: false,
+  //   // not need get on frontend
+  //   balance: 0,
+  //   cards: []
+  // })
 
   return batch.commit()
     .then((value) => {
@@ -93,7 +93,8 @@ exports.joinRoom = functions.https.onCall(async (data, context) => {
       ) {
         throw new Error('ROOM_FULL')
       }
-
+      console.log('isJoined', isJoined)
+      console.log('playersName', room.playerNames)
       const batch = admin.firestore().batch()
       if (!isJoined) {
         batch.update(admin
@@ -273,7 +274,7 @@ exports.readyToPlay = functions.https.onCall(async (data, context) => {
       donePlayers = donePlayers.filter(item => item !== playerId)
 
       if (
-        room.players.length >= 2 &&
+        room.players.length === 4 &&
         room.players.length === room.readyPlayers.length
       ) {
         batch.update(admin
