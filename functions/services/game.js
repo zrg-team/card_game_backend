@@ -178,8 +178,10 @@ exports.exitRoom = functions.https.onCall(async (data, context) => {
       const playerIndex = room.players.findIndex(key => key === playerId)
       const readyPlayers = (room.readyPlayers || []).filter(item => item !== playerId)
       const donePlayers = room.result.donePlayers || []
-      const players = room.players.splice(playerIndex, 1)
-      const playerNames = room.playerNames.splice(playerIndex, 1)
+      room.players.splice(playerIndex, 1)
+      room.playerNames.splice(playerIndex, 1)
+      console.log(room.players)
+      console.log(room.playerNames)
 
       const batch = admin.firestore().batch()
       batch.delete(admin
@@ -195,8 +197,8 @@ exports.exitRoom = functions.https.onCall(async (data, context) => {
         .collection('rooms')
         .doc(`${roomId}`), {
         readyPlayers: readyPlayers,
-        players,
-        playerNames,
+        players: room.players,
+        playerNames: room.playerNames,
         result: {
           ...room.result,
           donePlayers: donePlayers.filter(item => item !== playerId)
@@ -224,33 +226,6 @@ exports.randomAllCards = functions.https.onCall(async (data, context) => {
   }
 
   const roomId = data.id
-  const numberPlayers = data.readyPlayers.length
-
-  const deckNames = ['unused',
-    'AS', '2S', '3S', '4S', '5S', '6S', '7S', '8S', '9S', 'XS', 'JS', 'QS', 'KS',
-    'AH', '2H', '3H', '4H', '5H', '6H', '7H', '8H', '9H', 'XH', 'JH', 'QH', 'KH',
-    'AC', '2C', '3C', '4C', '5C', '6C', '7C', '8C', '9C', 'XC', 'JC', 'QC', 'KC',
-    'AD', '2D', '3D', '4D', '5D', '6D', '7D', '8D', '9D', 'XD', 'JD', 'QD', 'KD'
-  ]
-
-  const orderedCards = []
-
-  for (let i = 52; i > 0; i--) {
-    const position = randomPosition(i)
-    orderedCards.push(deckNames[position])
-    deckNames.splice(position, 1)
-  }
-
-  const random = Math.floor(Math.random() * 10)
-
-  const orderedCardsWithRandom = [...orderedCards.splice(random), ...orderedCards]
-
-  const playerCards = [[], [], [], []]
-  for (let i = 0; i < numberPlayers; i++) {
-    for (let j = i; j < 13 * numberPlayers; j = j + numberPlayers) {
-      playerCards[i].push(orderedCardsWithRandom[j])
-    }
-  }
 
   const batch = admin.firestore().batch()
 
@@ -262,6 +237,38 @@ exports.randomAllCards = functions.https.onCall(async (data, context) => {
       const room = roomDoc.data()
       if (!room) {
         throw new Error('ROOM_NOT_EXIST')
+      }
+
+      if (room.randomNumber !== 0) {
+        return
+      }
+
+      const numberPlayers = data.readyPlayers.length
+
+      const deckNames = ['unused',
+        'AS', '2S', '3S', '4S', '5S', '6S', '7S', '8S', '9S', 'XS', 'JS', 'QS', 'KS',
+        'AH', '2H', '3H', '4H', '5H', '6H', '7H', '8H', '9H', 'XH', 'JH', 'QH', 'KH',
+        'AC', '2C', '3C', '4C', '5C', '6C', '7C', '8C', '9C', 'XC', 'JC', 'QC', 'KC',
+        'AD', '2D', '3D', '4D', '5D', '6D', '7D', '8D', '9D', 'XD', 'JD', 'QD', 'KD'
+      ]
+
+      const orderedCards = []
+
+      for (let i = 52; i > 0; i--) {
+        const position = randomPosition(i)
+        orderedCards.push(deckNames[position])
+        deckNames.splice(position, 1)
+      }
+
+      const random = Math.floor(Math.random() * 10) + 1 // to be different zero
+
+      const orderedCardsWithRandom = [...orderedCards.splice(random), ...orderedCards]
+
+      const playerCards = [[], [], [], []]
+      for (let i = 0; i < numberPlayers; i++) {
+        for (let j = i; j < 13 * numberPlayers; j = j + numberPlayers) {
+          playerCards[i].push(orderedCardsWithRandom[j])
+        }
       }
 
       for (let i = 0; i < room.players.length; i++) {
@@ -410,7 +417,7 @@ exports.submitCards = functions.https.onCall(async (data, context) => {
     .collection('rooms')
     .doc(`${roomId}`)
     .get()
-    .then(roomDoc => {
+    .then(async roomDoc => {
       const room = roomDoc.data()
       if (!room) {
         throw new Error('ROOM_NOT_EXIST')
@@ -433,27 +440,27 @@ exports.submitCards = functions.https.onCall(async (data, context) => {
         // readyPlayers = readyPlayers.filter(item => item !== playerId)
       }
       if (donePlayers.length === room.readyPlayers.length) {
-        admin.firestore()
-          .collection('rooms')
-          .doc(`${roomId}`)
-          .collection('users')
-          .get()
-          .then(function (data) {
-            const cards = []
-
-            data.forEach(function (doc) {
-              const card = doc.data().cards
-              cards.push(card)
+        const userCards = []
+        for (let i = 0; i < room.players.length; i++) {
+          await admin.firestore()
+            .collection('rooms')
+            .doc(`${roomId}`)
+            .collection('users')
+            .doc(room.players[i])
+            .get()
+            .then(res => {
+              const card =  res.data().cards
+              userCards.push(card)
             })
-
-            calculateAndSetScore(cards, room, roomId)
-          })
+        }
+        calculateAndSetScore(userCards, room, roomId)
         // end game
         batch.update(admin
           .firestore()
           .collection('rooms')
           .doc(`${roomId}`), {
           ...room,
+          randomNumber: 0,
           result: {
             ...room.result,
             donePlayers: [],
