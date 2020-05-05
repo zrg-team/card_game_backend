@@ -245,8 +245,6 @@ const isHaveNoStraight = ranked => {
 const calculate = hand => {
   const ranked = rankHand(hand);
 
-
-  // fix here
   const isFlush = isFlushCards(hand);
   const isStraight = isStraightCards(ranked);
   console.log('calculate', ranked, isFlush, isStraight)
@@ -254,90 +252,103 @@ const calculate = hand => {
     return {
       handType: 13,
       handName: 'thung_pha_sanh_10_A',
-      handRank: value(ranked, 13)
+      handRank: 14,
+      value: value(ranked, 13)
     }
 
   else if (hand.length === 5 && isStraight && isFlush && ranked[0][0][0] === 'A' && ranked[4] && ranked[4][0] && ranked[4][0][0] === '2' && hand.length > 5)
     return {
       handType: 12,
       handName: 'thung_pha_sanh_A_5',
-      handRank: value(ranked, 12)
+      handRank: 14,
+      value: value(ranked, 12)
     }
   
   else if (hand.length === 5 && isStraight && isFlush && ranked[0][0][0] !== 'A')
     return {
       handType: 11,
       handName: 'thung_pha_sanh',
-      handRank: value(ranked, 11)
+      handRank: convertToNumber(ranked[0][0][0]),
+      value: value(ranked, 11)
     }
 
   else if (hand.length === 5 && ranked[0].length === 4)
     return {
       handType: 10,
       handName: 'tu_quy',
-      handRank: value(ranked, 10)
+      handRank: convertToNumber(ranked[0][0][0]),
+      value: value(ranked, 10)
     }
 
   else if (hand.length === 5 && ranked[0].length === 3 && ranked[1] && ranked[1].length === 2)
     return {
       handType: 9,
       handName: 'cu_lu',
-      handRank: value(ranked, 9)
+      handRank: 1,
+      value: value(ranked, 9)
     }
 
   else if (hand.length === 5 && isFlush)
     return {
       handType: 8,
       handName: 'thung',
-      handRank: value(ranked, 8)
+      handRank: 1,
+      value: value(ranked, 8)
     }
 
   else if (hand.length === 5 && isStraight && ranked[0][0][0] === 'A' && ranked[4] && ranked[4][0] && ranked[4][0][0] === '10')
     return {
       handType: 7,
       handName: 'sanh_10_A',
-      handRank: value(ranked, 7)
+      handRank: 1,
+      value: value(ranked, 7)
     }
 
   else if (hand.length === 5 && isStraight && ranked[0][0][0] === 'A' && ranked[4] && ranked[4][0] && ranked[4][0][0] === '2')
     return {
       handType: 6,
       handName: 'sanh_A_5',
-      handRank: value(ranked, 6)
+      handRank: 1,
+      value: value(ranked, 6)
     }
 
   else if (hand.length === 5 && isStraight && ranked[0][0][0] !== 'A')
     return {
       handType: 5,
       handName: 'sanh',
-      handRank: value(ranked, 5)
+      handRank: 1,
+      value: value(ranked, 5)
     }
 
   else if (ranked[0].length === 3)
     return {
       handType: 4,
       handName: 'xam_chi',
-      handRank: value(ranked, 4)
+      handRank: 1,
+      value: value(ranked, 4)
     }
 
   else if (hand.length === 5 && ranked[0].length === 2 && ranked[1].length === 2)
     return {
       handType: 3,
       handName: 'hai_doi',
-      handRank: value(ranked, 3)
+      handRank: 1,
+      value: value(ranked, 3)
     }
 
   else if (ranked[0].length === 2)
     return {
       handType: 2,
       handName: 'mot_doi',
-      handRank: value(ranked, 2)
+      handRank: 1,
+      value: value(ranked, 2)
     }
   else
     return {
       handType: 1,
       handName: 'roi_rac',
-      handRank: value(ranked, 1)
+      handRank: 1,
+      value: value(ranked, 1)
     }
 }
 
@@ -357,13 +368,13 @@ const evalFront = (hand1, hand2) => {
   if (res1.handName === 'xam_chi' && res1.handType !== 'xam_chi')
     return Number(hand1[0][0])
 
-  if (res1.handType > res2.handType) return 1;
+  if (res1.handType > res2.handType) return res1.handRank;
 
-  if (res1.handType < res2.handType) return -1;
+  if (res1.handType < res2.handType) return -res2.handType;
 
-  if (res1.handType === res2.handType && res1.handRank > res2.handRank) return 1;
+  if (res1.handType === res2.handType && res1.value > res2.value) return res1.handRank;;
 
-  if (res1.handType === res2.handType && res1.handRank < res2.handRank) return -1;
+  if (res1.handType === res2.handType && res1.value < res2.value) return -res2.handRank;;
 
   return 0
 }
@@ -384,13 +395,13 @@ const evalMid = (hand1, hand2) => {
   if (res1.handType === 'cu_lu' && res1.handType !== 'cu_lu')
     return 2
 
-  if (res1.handType > res2.handType) return 1;
+  if (res1.handType > res2.handType) return res1.handRank;
 
-  if (res1.handType < res2.handType) return -1;
+  if (res1.handType < res2.handType) return -res2.handRank;
 
-  if (res1.handType === res2.handType && res1.handRank > res2.handRank) return 1;
+  if (res1.handType === res2.handType && res1.value > res2.value) return res1.handRank;
 
-  if (res1.handType === res2.handType && res1.handRank < res2.handRank) return -1;
+  if (res1.handType === res2.handType && res1.value < res2.value) return -res2.handRank;
 
   return 0
 }
@@ -408,13 +419,13 @@ const evalBack = (hand1, hand2) => {
 
   const res2 = calculate(hand2)
 
-  if (res1.handType > res2.handType) return 1;
+  if (res1.handType > res2.handType) return res1.handRank;
 
-  if (res1.handType < res2.handType) return -1;
+  if (res1.handType < res2.handType) return -res2.handRank;
 
-  if (res1.handType === res2.handType && res1.handRank > res2.handRank) return 1;
+  if (res1.handType === res2.handType && res1.value > res2.value) return res1.handRank;
 
-  if (res1.handType === res2.handType && res1.handRank < res2.handRank) return -1;
+  if (res1.handType === res2.handType && res1.value < res2.value) return -res2.handRank;
 
   return 0
 }
@@ -547,15 +558,10 @@ const compare = (hand1, hand2) => {
     front: 0,
     mid: 0,
     back: 0,
-    winACE: 0,
     foul: 0,
   }
   console.log('compare', res1);
   console.log('compare', res2);
-
-  const winACE = countACE(hand1);
-
-  result = {...result, winACE }
 
   if (res1.handType > 0 && res2.handType > 0) return {...result, isMaubinh: true, maubinh: 0}
 
@@ -585,9 +591,18 @@ const compare = (hand1, hand2) => {
 
   const resFront = evalFront(front1, front2)
 
-  // dem xi
+  console.log('compare', resBack, resMid, resFront)
 
-  console.log('compare', resBack, resMid, resFront, winACE)
+  if (resBack < 0 && resMid < 0 && resFront < 0) {
+    console.log('thua ca 3 chi')
+    return {
+      ...result,
+      front: resFront * 2,
+      mid: resMid * 2,
+      back: resBack * 2,
+    }
+  }
+
   return {
     ...result,
     front: resFront,
@@ -619,11 +634,12 @@ exports.calculateResult = (userCards) => {
         front: userRes[i].front + res.front,
         mid: userRes[i].mid + res.mid,
         back: userRes[i].back + res.back,
-        winACE: userRes[i].winACE + res.winACE,
         foul: userRes[i].foul + res.foul,
       }
-      console.log('calculate and userRes', userRes);
     }
+
+    const winACE = countACE(userCards[i]);
+    userRes[i].winACE = winACE
   }
 
   return userRes;
