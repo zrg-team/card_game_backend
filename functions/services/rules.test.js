@@ -18,6 +18,32 @@ calculateResult([["AS","AH","AD","JC","9S","8S","8C","7S","6S","5C","4S","3S","2
 // expect chi co 2 doi
 calculateResult([["AS","AH","JD","JC","9S","8S","XC","7S","6S","5C","4S","3S","2S"],
 ["KS","KD","9D","3H","8H","KS","KD","9D","3H","8H","9D","3H","8H"]]);
+calculateResult([[ 'JC',
+  '2S',
+  'XH',
+  '7C',
+  '4S',
+  '6D',
+  'JD',
+  'AS',
+  'QS',
+  '9D',
+  '3H',
+  '7D',
+  'KH' ],['9S',
+'2S',
+'KS',
+'7D',
+'2D',
+'4C',
+'9H',
+'5D',
+'9C',
+'XD',
+'3D',
+'JS',
+'QS']]);
+
 
 // expect 12 la cung mau
 calculateResult([["AS","AC","JC","XC","9H","8S","KS","7S","6S","5C","4S","3S","2S"],

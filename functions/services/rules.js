@@ -92,7 +92,7 @@ const isHaveNoFlush = cards => {
         DCount ++;
       if (card[1] === 'C')
         CCount ++;
-      console.log(HCount)
+
       if (HCount === 5 || SCount === 5 || DCount === 5 || CCount === 5) {
         return false
       }
@@ -217,7 +217,19 @@ const isSubStraight = ranked => {
 }
 
 // isHaveNoStraight
-const isHaveNoStraight = ranked => {
+const isHaveNoStraight = hand => {
+  let ranked = [];
+
+  // split card to rank
+  for (let card of hand) {
+      let r = convertToNumber(card[0]);
+      ranked[r] = ranked[r] || [];
+      ranked[r].push(card);
+  }
+
+  // sort high to low
+  ranked = ranked.filter((rank) => !!rank).reverse();
+
   // case ACE, X, X, X, X, X, X, 5, 4, 3, 2
   if (ranked[0][0][0] === 'A' && ranked[7] 
       && ranked[7][0][0] === '5' && ranked[8] 
@@ -236,6 +248,7 @@ const isHaveNoStraight = ranked => {
     } else {
       count = 0;
     }
+    console.log(count)
     if (count === 5) return false;
   }
 
@@ -452,14 +465,14 @@ const superWin = hand => {
       handRank: 26
     }
 
-  else if (ranked[0].length === 3 && ranked.length === 11 && isHaveNoFlush(hand) && isHaveNoStraight(ranked.slice(1,11)))
+  else if (ranked[0].length === 3 && ranked.length === 11 && isHaveNoFlush(hand) && isHaveNoStraight(hand))
     return {
       handType: 7,
       handName: 'chi_mot_xam_chi',
       handRank: 22
     }
   
-  else if (ranked[0].length === 2 && ranked[0].length === 2 && ranked.length === 11 && isHaveNoFlush(hand) && isHaveNoStraight(ranked.slice(2,11)))
+  else if (ranked[0].length === 2 && ranked[1].length === 2 && ranked.length === 11 && isHaveNoFlush(hand) && isHaveNoStraight(hand))
     return {
       handType: 6,
       handName: 'chi_co_2_doi',
@@ -516,7 +529,6 @@ const countACE = hand => {
     }
   }
 
-  console.log('countACE', count);
   return 4 * count
 }
 
@@ -644,29 +656,3 @@ exports.calculateResult = (userCards) => {
 
   return userRes;
 }
-// calculateResult([[ 'QH',
-// '3C',
-// '3S',
-// '6S',
-// '8S',
-// '5H',
-// 'AS',
-// 'AD',
-// '4S',
-// '5S',
-// '6D',
-// '7H',
-// '8C' ],['9S',
-// '2S',
-// 'KS',
-// '7D',
-// '2D',
-// '4C',
-// '9H',
-// '5D',
-// '9C',
-// 'XD',
-// '3D',
-// 'JS',
-// 'QS']]);
-// ['4C','3D','QD','JH','5H','6H','9H','AH','8C','8H','8D','KC','XD']

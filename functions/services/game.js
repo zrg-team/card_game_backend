@@ -294,6 +294,15 @@ exports.randomAllCards = functions.https.onCall(async (data, context) => {
         }
       })
 
+      // setTimeout(() => {
+      //   endGame(room, roomId, batch)
+        
+      //   return batch.commit()
+      //   .then((value) => {
+      //     return value
+      //   })
+      // }, 65000)
+
       return batch.commit()
         .then((value) => {
           return value
@@ -335,7 +344,7 @@ exports.readyToPlay = functions.https.onCall(async (data, context) => {
       donePlayers = donePlayers.filter(item => item !== playerId)
 
       if (
-        room.players.length === 4 &&
+        room.players.length === 2 &&
         room.players.length === room.readyPlayers.length
       ) {
         batch.update(admin
@@ -350,18 +359,24 @@ exports.readyToPlay = functions.https.onCall(async (data, context) => {
           },
           readyPlayers: readyPlayers
         })
-        return batch.commit()
-          .then((value) => {
-            return value
-          })
+      } else {
+        batch.update(admin
+          .firestore()
+          .collection('rooms')
+          .doc(`${roomId}`), {
+          ...room,
+          readyPlayers: readyPlayers
+        })
       }
 
       batch.update(admin
         .firestore()
         .collection('rooms')
-        .doc(`${roomId}`), {
-        ...room,
-        readyPlayers: readyPlayers
+        .doc(`${roomId}`)
+        .collection('users')
+        .doc(`${playerId}`), {
+        cards: [],
+        draw: {}
       })
 
       return batch.commit()
@@ -371,12 +386,10 @@ exports.readyToPlay = functions.https.onCall(async (data, context) => {
     })
 })
 
-const calculateAndSetScore = (cards, room, roomId) => {
+const calculateAndSetScore = (cards, room, roomId, batch) => {
   const userRes = ruleModule.calculateResult(cards)
 
   console.log('userRes', userRes)
-
-  const batch = admin.firestore().batch()
 
   for (let i = 0; i < room.players.length; i++) {
     batch.update(admin
@@ -388,13 +401,6 @@ const calculateAndSetScore = (cards, room, roomId) => {
       draw: userRes[i]
     })
   }
-
-  console.log('calculating ?')
-
-  return batch.commit()
-    .then((value) => {
-      return value
-    })
 }
 
 exports.submitCards = functions.https.onCall(async (data, context) => {
@@ -440,34 +446,9 @@ exports.submitCards = functions.https.onCall(async (data, context) => {
         // readyPlayers = readyPlayers.filter(item => item !== playerId)
       }
       if (donePlayers.length === room.readyPlayers.length) {
-        const userCards = []
-        for (let i = 0; i < room.players.length; i++) {
-          await admin.firestore()
-            .collection('rooms')
-            .doc(`${roomId}`)
-            .collection('users')
-            .doc(room.players[i])
-            .get()
-            .then(res => {
-              const card =  res.data().cards
-              userCards.push(card)
-            })
-        }
-        calculateAndSetScore(userCards, room, roomId)
-        // end game
-        batch.update(admin
-          .firestore()
-          .collection('rooms')
-          .doc(`${roomId}`), {
-          ...room,
-          randomNumber: 0,
-          result: {
-            ...room.result,
-            donePlayers: [],
-            status: 'DONE'
-          },
-          readyPlayers: []
-        })
+        console.log('111111')
+        await endGame(room, roomId, batch)
+        console.log('222222')
       } else {
         batch.update(admin
           .firestore()
@@ -488,3 +469,34 @@ exports.submitCards = functions.https.onCall(async (data, context) => {
         })
     })
 })
+
+const endGame = async (room, roomId, batch) => {
+  const userCards = []
+  for (let i = 0; i < room.players.length; i++) {
+    await admin.firestore()
+      .collection('rooms')
+      .doc(`${roomId}`)
+      .collection('users')
+      .doc(room.players[i])
+      .get()
+      .then(res => {
+        const card =  res.data().cards
+        userCards.push(card)
+      })
+  }
+  calculateAndSetScore(userCards, room, roomId, batch)
+  // end game
+  batch.update(admin
+    .firestore()
+    .collection('rooms')
+    .doc(`${roomId}`), {
+    ...room,
+    randomNumber: 0,
+    result: {
+      ...room.result,
+      donePlayers: [],
+      status: 'DONE'
+    },
+    readyPlayers: []
+  })
+}
