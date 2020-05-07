@@ -261,7 +261,7 @@ const calculate = hand => {
   const isFlush = isFlushCards(hand);
   const isStraight = isStraightCards(ranked);
   console.log('calculate', ranked, isFlush, isStraight)
-  if (hand.length === 5 && isStraight && isFlush && ranked[0][0][0] === 'A' && ranked[4] && ranked[4][0] && ranked[4][0][0] === '10')
+  if (hand.length === 5 && isStraight && isFlush && ranked[0][0][0] === 'A' && ranked[4] && ranked[4][0] && ranked[4][0][0] === 'X')
     return {
       handType: 13,
       handName: 'thung_pha_sanh_10_A',
@@ -309,7 +309,7 @@ const calculate = hand => {
       value: value(ranked, 8)
     }
 
-  else if (hand.length === 5 && isStraight && ranked[0][0][0] === 'A' && ranked[4] && ranked[4][0] && ranked[4][0][0] === '10')
+  else if (hand.length === 5 && isStraight && ranked[0][0][0] === 'A' && ranked[4] && ranked[4][0] && ranked[4][0][0] === 'X')
     return {
       handType: 7,
       handName: 'sanh_10_A',
@@ -615,6 +615,16 @@ const compare = (hand1, hand2) => {
     }
   }
 
+  if (resBack > 0 && resMid > 0 && resFront > 0) {
+    console.log('thang ca 3 chi')
+    return {
+      ...result,
+      front: resFront * 2,
+      mid: resMid * 2,
+      back: resBack * 2,
+    }
+  }
+
   return {
     ...result,
     front: resFront,
@@ -653,6 +663,12 @@ exports.calculateResult = (userCards) => {
     const winACE = countACE(userCards[i]);
     userRes[i].winACE = winACE
   }
-
+  console.log(userRes)
   return userRes;
 }
+
+// calculateResult([
+//   ['AC','2D','3D','4H','4H','6H','6H','8H','8C','9H','XD','JD','QC'],
+//   ['2C','3C','4H','5S','5S','6D','6S','AS','AH','XD','JD','QD','KC'],
+//   ['3C','4C','5H','3S','4S','5D','6S','8S','7H','8D','9D','XD','JC'],
+//   ['2C','3C','4H','5S','5S','6D','6S','AS','9H','XD','JD','QD','KC']]);

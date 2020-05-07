@@ -294,14 +294,28 @@ exports.randomAllCards = functions.https.onCall(async (data, context) => {
         }
       })
 
-      // setTimeout(() => {
-      //   endGame(room, roomId, batch)
-        
-      //   return batch.commit()
-      //   .then((value) => {
-      //     return value
-      //   })
-      // }, 65000)
+      setTimeout(async () => {
+        console.log('work timeout 1')
+        return admin.firestore()
+            .collection('rooms')
+            .doc(`${roomId}`)
+            .get()
+            .then(async roomDoc => {
+              const room = roomDoc.data()
+
+              if (room.donePlayers !== 0) {
+                console.log('work timeout 2')
+
+                await endGame(room, roomId, batch)
+                console.log('work timeout 3')
+              }
+      
+              return batch.commit()
+              .then((value) => {
+                return value
+              })
+            })
+      }, 61000)
 
       return batch.commit()
         .then((value) => {
