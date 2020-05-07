@@ -344,7 +344,7 @@ exports.readyToPlay = functions.https.onCall(async (data, context) => {
       donePlayers = donePlayers.filter(item => item !== playerId)
 
       if (
-        room.players.length === 2 &&
+        room.players.length === 4 &&
         room.players.length === room.readyPlayers.length
       ) {
         batch.update(admin
