@@ -378,12 +378,15 @@ const evalFront = (hand1, hand2) => {
 
   const res2 = calculate(hand2)
 
-  if (res1.handName === 'xam_chi' && res1.handType !== 'xam_chi')
+  if (res1.handName === 'xam_chi' && res2.handName !== 'xam_chi')
     return Number(hand1[0][0])
+
+  if (res1.handName !== 'xam_chi' && res2.handName === 'xam_chi')
+    return -Number(hand1[0][0])
 
   if (res1.handType > res2.handType) return res1.handRank;
 
-  if (res1.handType < res2.handType) return -res2.handType;
+  if (res1.handType < res2.handType) return -res2.handRank;
 
   if (res1.handType === res2.handType && res1.value > res2.value) return res1.handRank;;
 
@@ -405,8 +408,11 @@ const evalMid = (hand1, hand2) => {
 
   const res2 = calculate(hand2)
 
-  if (res1.handType === 'cu_lu' && res1.handType !== 'cu_lu')
+  if (res1.handName === 'cu_lu' && res2.handName !== 'cu_lu')
     return 2
+
+  if (res1.handName !== 'cu_lu' && res2.handName === 'cu_lu')
+    return -2
 
   if (res1.handType > res2.handType) return res1.handRank;
 
@@ -603,7 +609,7 @@ const compare = (hand1, hand2) => {
 
   const resFront = evalFront(front1, front2)
 
-  console.log('compare', resBack, resMid, resFront)
+  console.log('compare 3 chi back, mid, front', resBack, resMid, resFront)
 
   if (resBack < 0 && resMid < 0 && resFront < 0) {
     console.log('thua ca 3 chi')
@@ -668,7 +674,24 @@ exports.calculateResult = (userCards) => {
 }
 
 // calculateResult([
-//   ['AC','2D','3D','4H','4H','6H','6H','8H','8C','9H','XD','JD','QC'],
-//   ['2C','3C','4H','5S','5S','6D','6S','AS','AH','XD','JD','QD','KC'],
-//   ['3C','4C','5H','3S','4S','5D','6S','8S','7H','8D','9D','XD','JC'],
-//   ['2C','3C','4H','5S','5S','6D','6S','AS','9H','XD','JD','QD','KC']]);
+//   ['AC','5C','5D','XC','XH','3S','KC','3C','9D','QC','QS','JS','JS'],
+//   ['7C','9H','4C','JD','7S','7D','6C','8C','XD','8S','4D','8D','6D'],
+//   ['4H','4S','5S','6H','7H','8H','KS','KD','9C','2S','3H','AS','JC'],
+//   ['AH','AD','KH','2H','2D','2C','QH','QD','6S','9S','5H','3D','XS']]);
+
+
+// calculateResult([["JH", "JD", "3D", "QH", "QC", "9S", "9C", "3H", "2S", "3C", "4D", "5C", "6H"],
+// ["JS", "7H", "7D", "KH", "KS", "4S", "4C", "XH", "AC", "AH", "6D", "6S", "5S"],
+// ["AD", "AS", "9H", "8S", "8H", "XC", "XD", "5H", "2H", "2D", "6C", "KC", "KD"],
+// ["XS", "QS", "QD", "8C", "8D", "7C", "7S", "3S", "4H", "JC", "5D", "2C", "9D"]])
+
+// ["5S", "5D", "5C", "JC", "4H", "4D", "4C", "9C", "XH", "XD", "2S", "7C", "QH"]
+// ["5S", "5D", "5C", "JC", "4H", "4D", "4C", "9C", "XH", "XD", "2S", "7C", "QH"]
+// 1: (13) ["KD", "KH", "6C", "QS", "QD", "2D", "2H", "2C", "KC", "8C", "8D", "AS", "5H"]
+// 2: (13) ["4S", "KS", "6D", "7H", "7D", "3C", "JD", "3D", "9D", "9S", "9H", "8S", "8H"]
+// 3: (13) ["QC", "JH", "XC", "JS", "3S", "6S", "7S", "XS", "AD", "AC", "AH", "3H", "6H"]
+
+// ["XD", "4C", "7C", "8C", "QD", "JC", "9D", "4S", "2H", "QC", "5C", "8D", "3S"]
+// 1: (13) ["7S", "7D", "4H", "AH", "AC", "XS", "6S", "8S", "XH", "9C", "AS", "9H", "KD"]
+// 2: (13) ["5H", "3H", "3C", "6H", "6D", "JH", "2C", "2S", "KS", "KC", "QH", "QS", "AD"]
+// 3: (13) ["KH", "JD", "5S", "8H", "JS", "XC", "9S", "7H", "2D", "4D", "3D", "5D", "6C"]
