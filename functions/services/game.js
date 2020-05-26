@@ -299,24 +299,24 @@ exports.randomAllCards = functions.https.onCall(async (data, context) => {
 
         console.log('work timeout 1')
         return admin.firestore()
-            .collection('rooms')
-            .doc(`${roomId}`)
-            .get()
-            .then(async roomDoc => {
-              const room = roomDoc.data()
+          .collection('rooms')
+          .doc(`${roomId}`)
+          .get()
+          .then(async roomDoc => {
+            const room = roomDoc.data()
 
-              if (room.donePlayers !== 0) {
-                console.log('work timeout 2')
+            if (room.donePlayers !== 0) {
+              console.log('work timeout 2')
 
-                await endGame(room, roomId, batch1)
-                console.log('work timeout 3')
-              }
-      
-              return batch1.commit()
+              await endGame(room, roomId, batch1)
+              console.log('work timeout 3')
+            }
+
+            return batch1.commit()
               .then((value) => {
                 return value
               })
-            })
+          })
       }, 61000)
 
       return batch.commit()
@@ -386,7 +386,7 @@ exports.readyToPlay = functions.https.onCall(async (data, context) => {
             ...room.result,
             donePlayers,
             status: 'WAITING_FOR_READY'
-          },
+          }
         })
       }
 
@@ -501,7 +501,7 @@ const endGame = async (room, roomId, batch) => {
       .doc(room.players[i])
       .get()
       .then(res => {
-        const card =  res.data().cards
+        const card = res.data().cards
         userCards.push(card)
       })
   }
